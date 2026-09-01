@@ -10,10 +10,13 @@ public record PageRequestDto(
         String sortBy,
         Sort.Direction direction
 ) {
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
     public PageRequestDto {
-        page = (page != null) ? page : 0;
-        size = (size != null) ? size : 20;
-        sortBy = (sortBy != null) ? sortBy : "createdAt";
+        page = (page != null && page >= 0) ? page : 0;
+        size = (size != null && size > 0) ? Math.min(size, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
+        sortBy = (sortBy != null && !sortBy.isBlank()) ? sortBy : "createdAt";
         direction = (direction != null) ? direction : Sort.Direction.DESC;
     }
 

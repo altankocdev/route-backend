@@ -7,13 +7,13 @@ import lombok.Builder;
 
 @Builder
 public record CoordinateDto(
-        @NotNull
-        @DecimalMin(value = "-90.0", message = "Enlem -90 ile 90 arasında olmalıdır")
-        @DecimalMax(value = "90.0", message = "Enlem -90 ile 90 arasında olmalıdır")
+        @NotNull(message = "{validation.latitude.required}")
+        @DecimalMin(value = "-90.0", message = "{validation.latitude.range}")
+        @DecimalMax(value = "90.0", message = "{validation.latitude.range}")
         Double latitude,
 
-        @NotNull
-        @DecimalMin(value = "-180.0", message = "Boylam -180 ile 180 arasında olmalıdır")
-        @DecimalMax(value = "180.0", message = "Boylam -180 ile 180 arasında olmalıdır")
+        @NotNull(message = "{validation.longitude.required}")
+        @DecimalMin(value = "-180.0", message = "{validation.longitude.range}")
+        @DecimalMax(value = "180.0", message = "{validation.longitude.range}")
         Double longitude
 ) {}
