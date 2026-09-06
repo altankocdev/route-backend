@@ -1,4 +1,4 @@
-package com.routeapp.routebackend.user.entity.audit;
+package com.routeapp.routebackend.admin.entity;
 
 public enum AdminActionType {
     USER_BANNED,
