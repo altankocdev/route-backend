@@ -24,6 +24,17 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "user.emailAlreadyExists"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "auth.invalidCredentials"),
     USER_INACTIVE(HttpStatus.FORBIDDEN, "user.inactive"),
+    USER_FIRST_NAME_REQUIRED(HttpStatus.BAD_REQUEST, "user.firstNameRequired"),
+    USER_LAST_NAME_REQUIRED(HttpStatus.BAD_REQUEST, "user.lastNameRequired"),
+    USER_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "user.emailRequired"),
+    USER_PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "user.passwordRequired"),
+    USER_USERNAME_REQUIRED(HttpStatus.BAD_REQUEST, "user.usernameRequired"),
+    USER_USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "user.usernameAlreadyExists"),
+    USER_USERNAME_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "user.usernameInvalidFormat"),
+
+    EMAIL_ALREADY_VERIFIED(HttpStatus.CONFLICT, "user.emailAlreadyVerified"),
+    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "user.emailNotVerified"),
+    INVALID_OR_EXPIRED_TOKEN(HttpStatus.BAD_REQUEST, "auth.invalidOrExpiredToken"),
 
     // Location
     LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "location.notFound"),
@@ -37,6 +48,9 @@ public enum ErrorCode {
     // Photo
     PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, "photo.notFound"),
     PHOTO_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "photo.uploadFailed");
+
+
+
 
     private final HttpStatus httpStatus;
     private final String messageKey;

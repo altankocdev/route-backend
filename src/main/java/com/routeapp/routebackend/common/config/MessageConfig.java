@@ -19,7 +19,7 @@ public class MessageConfig {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
         messageSource.setBasename("classpath:messages");
         messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setDefaultLocale(new Locale("tr"));
+        messageSource.setDefaultLocale(Locale.of("tr"));
         messageSource.setFallbackToSystemLocale(false);
         return messageSource;
     }
@@ -34,8 +34,8 @@ public class MessageConfig {
     @Bean
     public LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
-        localeResolver.setDefaultLocale(new Locale("tr"));
-        localeResolver.setSupportedLocales(List.of(new Locale("tr"), Locale.ENGLISH));
+        localeResolver.setDefaultLocale(Locale.of("tr"));
+        localeResolver.setSupportedLocales(List.of(Locale.of("tr"), Locale.ENGLISH));
         return localeResolver;
     }
 }
