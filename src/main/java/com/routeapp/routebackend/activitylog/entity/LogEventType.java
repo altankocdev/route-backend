@@ -1,0 +1,37 @@
+package com.routeapp.routebackend.activitylog.entity;
+
+public enum LogEventType {
+
+    // Hesap / kimlik olayları
+    USER_REGISTERED,
+    USER_LOGGED_IN,
+    EMAIL_VERIFIED,
+    EMAIL_CHANGE_REQUESTED,
+    EMAIL_CHANGED,
+    USERNAME_CHANGED,
+    PASSWORD_CHANGED,
+    PASSWORD_RESET_REQUESTED,
+    PASSWORD_RESET_COMPLETED,
+    ACCOUNT_DEACTIVATED,
+    ACCOUNT_REACTIVATED,
+    ACCOUNT_DELETION_REQUESTED,
+    ACCOUNT_DELETION_CANCELLED,
+    ACCOUNT_HARD_DELETED,
+
+    // Sosyal olaylar (Location/Activity modülleri yazılınca kullanılacak)
+    LOCATION_CREATED,
+    LOCATION_LIKED,
+    LOCATION_SAVED,
+    ACTIVITY_CREATED,
+    ACTIVITY_LIKED,
+    ACTIVITY_SAVED,
+
+    // Admin işlemleri
+    USER_BANNED,
+    USER_UNBANNED,
+    USER_DELETED_BY_ADMIN,
+    LOCATION_REMOVED_BY_ADMIN,
+    ACTIVITY_REMOVED_BY_ADMIN,
+    REPORT_RESOLVED,
+    REPORT_DISMISSED
+}

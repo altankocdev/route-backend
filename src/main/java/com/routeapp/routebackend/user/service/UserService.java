@@ -25,6 +25,8 @@ public interface UserService {
 
     void requireVerifiedEmail(User user);
 
+    Page<User> getActiveUsers(Pageable pageable);
+
     // Kayıt
     UserResponseDto register(RegisterRequestDto dto);
 

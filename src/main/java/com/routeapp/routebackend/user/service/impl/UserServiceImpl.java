@@ -1,5 +1,9 @@
 package com.routeapp.routebackend.user.service.impl;
 
+import com.routeapp.routebackend.activitylog.entity.LogActorType;
+import com.routeapp.routebackend.activitylog.entity.LogEventType;
+import com.routeapp.routebackend.activitylog.service.ActivityLogService;
+import com.routeapp.routebackend.common.enums.TargetType;
 import com.routeapp.routebackend.common.exception.BusinessException;
 import com.routeapp.routebackend.common.exception.ErrorCode;
 import com.routeapp.routebackend.user.dto.request.account.ChangeEmailRequestDto;
@@ -19,7 +23,6 @@ import com.routeapp.routebackend.user.repository.UserRepository;
 import com.routeapp.routebackend.user.repository.UserTokenRepository;
 import com.routeapp.routebackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +35,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -45,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final UserTokenRepository userTokenRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     @Override
     public User getByIdOrThrow(UUID userId) {
@@ -60,6 +63,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<User> searchUsers(String query, Pageable pageable) {
         return userRepository.searchActiveUsers(query, pageable);
+    }
+
+    @Override
+    public Page<User> getActiveUsers(Pageable pageable) {
+        return userRepository.findByStatus(UserStatus.ACTIVE, pageable);
     }
 
     @Override
@@ -90,6 +98,7 @@ public class UserServiceImpl implements UserService {
         user = userRepository.save(user);
 
         issueToken(user, TokenType.EMAIL_VERIFICATION, null, VERIFICATION_TOKEN_TTL_HOURS);
+        logUserEvent(user, LogEventType.USER_REGISTERED, null);
         // TODO: EmailService hazır olunca doğrulama linkini gönder
 
         return userMapper.toResponseDto(user);
@@ -102,6 +111,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByGoogleId(googleId)
                 .map(existing -> {
                     existing.recordLogin();
+                    logUserEvent(existing, LogEventType.USER_LOGGED_IN, "Google");
                     return userMapper.toResponseDto(existing);
                 })
                 .orElseGet(() -> {
@@ -119,6 +129,7 @@ public class UserServiceImpl implements UserService {
                     user.markEmailAsVerified();
                     user.recordLogin();
                     user = userRepository.save(user);
+                    logUserEvent(user, LogEventType.USER_REGISTERED, "Google");
                     return userMapper.toResponseDto(user);
                 });
     }
@@ -133,6 +144,7 @@ public class UserServiceImpl implements UserService {
         }
         user.markEmailAsVerified();
         userToken.markAsUsed();
+        logUserEvent(user, LogEventType.EMAIL_VERIFIED, null);
     }
 
     @Override
@@ -169,6 +181,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         issueToken(user, TokenType.EMAIL_CHANGE, dto.newEmail(), VERIFICATION_TOKEN_TTL_HOURS);
+        logUserEvent(user, LogEventType.EMAIL_CHANGE_REQUESTED, null);
         // TODO: EmailService hazır olunca linki YENİ e-postaya gönder
     }
 
@@ -176,8 +189,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void confirmEmailChange(String token) {
         UserToken userToken = getValidTokenOrThrow(token, TokenType.EMAIL_CHANGE);
-        userToken.getUser().changeEmail(userToken.getNewEmail());
+        User user = userToken.getUser();
+        user.changeEmail(userToken.getNewEmail());
         userToken.markAsUsed();
+        logUserEvent(user, LogEventType.EMAIL_CHANGED, null);
     }
 
     @Override
@@ -188,6 +203,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.USER_USERNAME_ALREADY_EXISTS);
         }
         user.changeUsername(dto.newUsername());
+        logUserEvent(user, LogEventType.USERNAME_CHANGED, null);
     }
 
     @Override
@@ -201,6 +217,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
         user.changePasswordHash(passwordEncoder.encode(dto.newPassword()));
+        logUserEvent(user, LogEventType.PASSWORD_CHANGED, null);
     }
 
     @Override
@@ -209,6 +226,7 @@ public class UserServiceImpl implements UserService {
         userRepository.findByEmail(dto.email()).ifPresent(user -> {
             if (!user.isGoogleAccount()) {
                 issueToken(user, TokenType.PASSWORD_RESET, null, PASSWORD_RESET_TOKEN_TTL_HOURS);
+                logUserEvent(user, LogEventType.PASSWORD_RESET_REQUESTED, null);
                 // TODO: EmailService hazır olunca linki gönder
             }
         });
@@ -219,32 +237,42 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void resetPassword(ResetPasswordRequestDto dto) {
         UserToken userToken = getValidTokenOrThrow(dto.token(), TokenType.PASSWORD_RESET);
-        userToken.getUser().changePasswordHash(passwordEncoder.encode(dto.newPassword()));
+        User user = userToken.getUser();
+        user.changePasswordHash(passwordEncoder.encode(dto.newPassword()));
         userToken.markAsUsed();
+        logUserEvent(user, LogEventType.PASSWORD_RESET_COMPLETED, null);
     }
 
     @Override
     @Transactional
     public void deactivateAccount(UUID userId) {
-        getByIdOrThrow(userId).deactivateAccount();
+        User user = getByIdOrThrow(userId);
+        user.deactivateAccount();
+        logUserEvent(user, LogEventType.ACCOUNT_DEACTIVATED, null);
     }
 
     @Override
     @Transactional
     public void reactivateAccount(UUID userId) {
-        getByIdOrThrow(userId).reactivateAccount();
+        User user = getByIdOrThrow(userId);
+        user.reactivateAccount();
+        logUserEvent(user, LogEventType.ACCOUNT_REACTIVATED, null);
     }
 
     @Override
     @Transactional
     public void requestAccountDeletion(UUID userId) {
-        getByIdOrThrow(userId).requestAccountDeletion();
+        User user = getByIdOrThrow(userId);
+        user.requestAccountDeletion();
+        logUserEvent(user, LogEventType.ACCOUNT_DELETION_REQUESTED, null);
     }
 
     @Override
     @Transactional
     public void cancelAccountDeletion(UUID userId) {
-        getByIdOrThrow(userId).cancelAccountDeletion();
+        User user = getByIdOrThrow(userId);
+        user.cancelAccountDeletion();
+        logUserEvent(user, LogEventType.ACCOUNT_DELETION_CANCELLED, null);
     }
 
     @Override
@@ -256,13 +284,16 @@ public class UserServiceImpl implements UserService {
         }
         if (user.getStatus() == UserStatus.DELETED) {
             user.cancelAccountDeletion();
+            logUserEvent(user, LogEventType.ACCOUNT_DELETION_CANCELLED, "Girişle otomatik iptal");
         }
         user.recordLogin();
+        logUserEvent(user, LogEventType.USER_LOGGED_IN, null);
     }
 
-    // ------------------------------------------------------------
-    // Private yardımcılar — interface'in parçası değil, implementasyon detayı
-    // ------------------------------------------------------------
+    private void logUserEvent(User user, LogEventType eventType, String detail) {
+        activityLogService.log(user.getId(), LogActorType.USER, eventType,
+                TargetType.USER, user.getId(), detail);
+    }
 
     private String generateUniqueTemporaryUsername() {
         String candidate;
