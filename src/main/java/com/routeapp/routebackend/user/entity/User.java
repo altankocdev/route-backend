@@ -25,7 +25,6 @@ import java.time.Instant;
         },
         indexes = {
                 @Index(name = "idx_users_status", columnList = "status"),
-                @Index(name = "idx_users_role", columnList = "role")
         }
 )
 public class User extends BaseEntity {
@@ -50,11 +49,6 @@ public class User extends BaseEntity {
 
     @Column(name = "profile_photo_url", length = 500)
     private String profilePhotoUrl;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 20)
-    @Builder.Default
-    private UserRole role = UserRole.USER;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

@@ -1,8 +1,7 @@
-package com.routeapp.routebackend.user.entity.audit;
+package com.routeapp.routebackend.admin.entity;
 
 import com.routeapp.routebackend.common.entity.BaseEntity;
 import com.routeapp.routebackend.common.enums.TargetType;
-import com.routeapp.routebackend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,7 +26,7 @@ public class AdminAuditLog extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", nullable = false)
-    private User admin;
+    private Admin admin;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action_type", nullable = false, length = 30)

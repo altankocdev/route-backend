@@ -1,7 +1,6 @@
 package com.routeapp.routebackend.user.dto.response;
 
 import com.routeapp.routebackend.user.entity.User;
-import com.routeapp.routebackend.user.entity.UserRole;
 import com.routeapp.routebackend.user.entity.UserStatus;
 import lombok.Builder;
 
@@ -22,7 +21,6 @@ public record UserResponseDto(
         String email,
         boolean emailVerified,
         String profilePhotoUrl,
-        UserRole role,
         UserStatus status,
         Instant createdAt
 ) {
@@ -36,7 +34,6 @@ public record UserResponseDto(
                 .email(user.getEmail())
                 .emailVerified(user.isEmailVerified())
                 .profilePhotoUrl(user.getProfilePhotoUrl())
-                .role(user.getRole())
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 .build();

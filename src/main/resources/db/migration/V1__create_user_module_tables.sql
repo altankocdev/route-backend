@@ -1,10 +1,4 @@
--- ============================================================
--- V1: User modülü tabloları (users, user_tokens, user_activity_logs, admin_audit_logs)
--- ============================================================
-
--- ------------------------------------------------------------
 -- users
--- ------------------------------------------------------------
 CREATE TABLE users
 (
     id                    UUID PRIMARY KEY,
@@ -24,7 +18,6 @@ CREATE TABLE users
     google_id             VARCHAR(255),
     profile_photo_url     VARCHAR(500),
 
-    role                  VARCHAR(20)  NOT NULL,
     status                VARCHAR(20)  NOT NULL,
 
     ban_reason            VARCHAR(500),
@@ -41,11 +34,27 @@ CREATE TABLE users
 );
 
 CREATE INDEX idx_users_status ON users (status);
-CREATE INDEX idx_users_role ON users (role);
 
--- ------------------------------------------------------------
+-- admins
+CREATE TABLE admins
+(
+    id             UUID PRIMARY KEY,
+    created_at     TIMESTAMP    NOT NULL,
+    updated_at     TIMESTAMP    NOT NULL,
+    created_by     UUID,
+    updated_by     UUID,
+    version        BIGINT       NOT NULL DEFAULT 0,
+    active         BOOLEAN      NOT NULL DEFAULT TRUE,
+    deactivated_at TIMESTAMP,
+
+    full_name      VARCHAR(150) NOT NULL,
+    email          VARCHAR(150) NOT NULL,
+    password_hash  VARCHAR(255) NOT NULL,
+
+    CONSTRAINT uk_admins_email UNIQUE (email)
+);
+
 -- user_tokens (email doğrulama / email değişikliği / şifre sıfırlama)
--- ------------------------------------------------------------
 CREATE TABLE user_tokens
 (
     id             UUID PRIMARY KEY,
@@ -64,19 +73,17 @@ CREATE TABLE user_tokens
     expires_at     TIMESTAMP    NOT NULL,
     used_at        TIMESTAMP,
 
-    CONSTRAINT uk_user_tokens_token FOREIGN KEY (user_id) REFERENCES users (id),
+    CONSTRAINT fk_user_tokens_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT uk_user_tokens_token UNIQUE (token)
 );
 
 CREATE INDEX idx_user_tokens_user_id ON user_tokens (user_id);
 CREATE INDEX idx_user_tokens_expires_at ON user_tokens (expires_at);
 
--- ------------------------------------------------------------
--- user_activity_logs (UC-28: kullanıcının kendi hareket geçmişi)
--- ------------------------------------------------------------
+
 CREATE TABLE user_activity_logs
 (
-    id             UUID PRIMARY KEY,
+    id             UUID        PRIMARY KEY,
     created_at     TIMESTAMP   NOT NULL,
     updated_at     TIMESTAMP   NOT NULL,
     created_by     UUID,
@@ -96,12 +103,10 @@ CREATE TABLE user_activity_logs
 CREATE INDEX idx_user_activity_logs_user_id ON user_activity_logs (user_id);
 CREATE INDEX idx_user_activity_logs_created_at ON user_activity_logs (created_at);
 
--- ------------------------------------------------------------
--- admin_audit_logs (admin işlemlerinin kalıcı, silinemez kaydı)
--- ------------------------------------------------------------
+
 CREATE TABLE admin_audit_logs
 (
-    id             UUID PRIMARY KEY,
+    id             UUID        PRIMARY KEY,
     created_at     TIMESTAMP   NOT NULL,
     updated_at     TIMESTAMP   NOT NULL,
     created_by     UUID,
@@ -116,7 +121,7 @@ CREATE TABLE admin_audit_logs
     target_id      UUID        NOT NULL,
     reason         VARCHAR(500),
 
-    CONSTRAINT fk_admin_audit_logs_admin FOREIGN KEY (admin_id) REFERENCES users (id)
+    CONSTRAINT fk_admin_audit_logs_admin FOREIGN KEY (admin_id) REFERENCES admins (id)
 );
 
 CREATE INDEX idx_admin_audit_logs_admin_id ON admin_audit_logs (admin_id);
