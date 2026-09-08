@@ -1,10 +1,10 @@
 package com.routeapp.routebackend.user.service;
 
+import com.routeapp.routebackend.auth.dto.request.RegisterRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.ChangeEmailRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.ChangePasswordRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.ChangeUsernameRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.UpdateProfileRequestDto;
-import com.routeapp.routebackend.user.dto.request.registration.RegisterRequestDto;
 import com.routeapp.routebackend.user.dto.request.verification.ForgotPasswordRequestDto;
 import com.routeapp.routebackend.user.dto.request.verification.ResetPasswordRequestDto;
 import com.routeapp.routebackend.user.dto.response.UserResponseDto;
@@ -24,6 +24,8 @@ public interface UserService {
     Page<User> searchUsers(String query, Pageable pageable);
 
     void requireVerifiedEmail(User user);
+
+    User getByEmailOrThrow(String email);
 
     Page<User> getActiveUsers(Pageable pageable);
 

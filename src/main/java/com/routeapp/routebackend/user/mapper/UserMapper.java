@@ -1,6 +1,6 @@
 package com.routeapp.routebackend.user.mapper;
 
-import com.routeapp.routebackend.user.dto.request.registration.RegisterRequestDto;
+import com.routeapp.routebackend.auth.dto.request.RegisterRequestDto;
 import com.routeapp.routebackend.user.dto.response.UserResponseDto;
 import com.routeapp.routebackend.user.dto.response.UserSummaryResponseDto;
 import com.routeapp.routebackend.user.entity.User;
