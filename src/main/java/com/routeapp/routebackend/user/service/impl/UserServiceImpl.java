@@ -3,14 +3,15 @@ package com.routeapp.routebackend.user.service.impl;
 import com.routeapp.routebackend.activitylog.entity.LogActorType;
 import com.routeapp.routebackend.activitylog.entity.LogEventType;
 import com.routeapp.routebackend.activitylog.service.ActivityLogService;
+import com.routeapp.routebackend.auth.dto.request.RegisterRequestDto;
 import com.routeapp.routebackend.common.enums.TargetType;
 import com.routeapp.routebackend.common.exception.BusinessException;
 import com.routeapp.routebackend.common.exception.ErrorCode;
+import com.routeapp.routebackend.common.util.SecureTokenGenerator;
 import com.routeapp.routebackend.user.dto.request.account.ChangeEmailRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.ChangePasswordRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.ChangeUsernameRequestDto;
 import com.routeapp.routebackend.user.dto.request.account.UpdateProfileRequestDto;
-import com.routeapp.routebackend.user.dto.request.registration.RegisterRequestDto;
 import com.routeapp.routebackend.user.dto.request.verification.ForgotPasswordRequestDto;
 import com.routeapp.routebackend.user.dto.request.verification.ResetPasswordRequestDto;
 import com.routeapp.routebackend.user.dto.response.UserResponseDto;
@@ -29,10 +30,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -75,6 +74,12 @@ public class UserServiceImpl implements UserService {
         if (!user.isEmailVerified()) {
             throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
+    }
+
+    @Override
+    public User getByEmailOrThrow(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
     @Override
@@ -172,7 +177,7 @@ public class UserServiceImpl implements UserService {
     public void requestEmailChange(UUID userId, ChangeEmailRequestDto dto) {
         User user = getByIdOrThrow(userId);
         if (user.isGoogleAccount()) {
-            throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION);
+            throw new BusinessException(ErrorCode.GOOGLE_ACCOUNT_ACTION_NOT_ALLOWED);
         }
         if (!passwordEncoder.matches(dto.currentPassword(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
@@ -211,7 +216,7 @@ public class UserServiceImpl implements UserService {
     public void changePassword(UUID userId, ChangePasswordRequestDto dto) {
         User user = getByIdOrThrow(userId);
         if (user.isGoogleAccount()) {
-            throw new BusinessException(ErrorCode.BUSINESS_RULE_VIOLATION);
+            throw new BusinessException(ErrorCode.GOOGLE_ACCOUNT_ACTION_NOT_ALLOWED);
         }
         if (!passwordEncoder.matches(dto.currentPassword(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
@@ -315,7 +320,7 @@ public class UserServiceImpl implements UserService {
     private void issueToken(User user, TokenType type, String newEmail, int ttlHours) {
         UserToken token = UserToken.builder()
                 .user(user)
-                .token(generateSecureToken())
+                .token(SecureTokenGenerator.generate())
                 .tokenType(type)
                 .newEmail(newEmail)
                 .expiresAt(Instant.now().plus(ttlHours, ChronoUnit.HOURS))
@@ -323,9 +328,5 @@ public class UserServiceImpl implements UserService {
         userTokenRepository.save(token);
     }
 
-    private String generateSecureToken() {
-        byte[] bytes = new byte[32];
-        new SecureRandom().nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
+
 }

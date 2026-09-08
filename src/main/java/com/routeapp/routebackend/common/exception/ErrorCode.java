@@ -47,6 +47,9 @@ public enum ErrorCode {
 
     // Admin
     ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "admin.notFound"),
+    ADMIN_INACTIVE(HttpStatus.FORBIDDEN, "admin.inactive"),
+    GOOGLE_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "auth.googleTokenInvalid"),
+    GOOGLE_ACCOUNT_ACTION_NOT_ALLOWED(HttpStatus.FORBIDDEN, "auth.googleAccountActionNotAllowed"),
 
     // Photo
     PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, "photo.notFound"),

@@ -1,4 +1,4 @@
-package com.routeapp.routebackend.user.dto.request.registration;
+package com.routeapp.routebackend.auth.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
