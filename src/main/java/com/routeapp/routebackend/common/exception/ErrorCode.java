@@ -45,6 +45,9 @@ public enum ErrorCode {
     ACTIVITY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "activity.accessDenied"),
     ACTIVITY_STOP_REQUIRED(HttpStatus.BAD_REQUEST, "activity.stopRequired"),
 
+    // Admin
+    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "admin.notFound"),
+
     // Photo
     PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, "photo.notFound"),
     PHOTO_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "photo.uploadFailed");
