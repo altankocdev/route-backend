@@ -12,6 +12,7 @@ import com.routeapp.routebackend.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface UserService {
@@ -23,11 +24,16 @@ public interface UserService {
 
     Page<User> searchUsers(String query, Pageable pageable);
 
+    // TODO: Şu an hiçbir yerden çağrılmıyor — Location/Activity create,
+    // like, save, report gibi her "içerik üretme" endpoint'inin servis katmanında
+    // bu metod EN BAŞTA çağrılmalı (UC-2 kuralı). Location/Activity yazılırken unutma.
     void requireVerifiedEmail(User user);
 
     User getByEmailOrThrow(String email);
 
     Page<User> getActiveUsers(Pageable pageable);
+
+    Optional<User> findByEmailForLogin(String email);
 
     // Kayıt
     UserResponseDto register(RegisterRequestDto dto);

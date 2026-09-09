@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -44,6 +45,11 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public AdminResponseDto getOwnProfile(UUID adminId) {
         return adminMapper.toResponseDto(getByIdOrThrow(adminId));
+    }
+
+    @Override
+    public Optional<Admin> findByEmailForLogin(String email) {
+        return adminRepository.findByEmail(email);
     }
 
     @Override
