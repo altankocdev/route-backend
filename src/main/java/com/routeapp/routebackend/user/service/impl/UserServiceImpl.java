@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -67,6 +68,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<User> getActiveUsers(Pageable pageable) {
         return userRepository.findByStatus(UserStatus.ACTIVE, pageable);
+    }
+
+    @Override
+    public Optional<User> findByEmailForLogin(String email) {
+        return userRepository.findByEmail(email);
     }
 
     @Override
@@ -115,6 +121,17 @@ public class UserServiceImpl implements UserService {
                                                   String email, String profilePhotoUrl) {
         return userRepository.findByGoogleId(googleId)
                 .map(existing -> {
+                    if (existing.getStatus() == UserStatus.BANNED) {
+                        throw new BusinessException(ErrorCode.USER_INACTIVE);
+                    }
+                    if (existing.getStatus() == UserStatus.DEACTIVATED) {
+                        existing.reactivateAccount();
+                        logUserEvent(existing, LogEventType.ACCOUNT_REACTIVATED, "Google girişiyle otomatik");
+                    }
+                    if (existing.getStatus() == UserStatus.DELETED) {
+                        existing.cancelAccountDeletion();
+                        logUserEvent(existing, LogEventType.ACCOUNT_DELETION_CANCELLED, "Google girişiyle otomatik iptal");
+                    }
                     existing.recordLogin();
                     logUserEvent(existing, LogEventType.USER_LOGGED_IN, "Google");
                     return userMapper.toResponseDto(existing);
@@ -286,6 +303,10 @@ public class UserServiceImpl implements UserService {
         User user = getByIdOrThrow(userId);
         if (user.getStatus() == UserStatus.BANNED) {
             throw new BusinessException(ErrorCode.USER_INACTIVE);
+        }
+        if (user.getStatus() == UserStatus.DEACTIVATED) {
+            user.reactivateAccount();
+            logUserEvent(user, LogEventType.ACCOUNT_REACTIVATED, "Girişle otomatik");
         }
         if (user.getStatus() == UserStatus.DELETED) {
             user.cancelAccountDeletion();

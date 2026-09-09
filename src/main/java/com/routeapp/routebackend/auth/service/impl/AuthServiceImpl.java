@@ -64,12 +64,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthTokenResponseDto login(LoginRequestDto dto) {
-        User user = userService.getByEmailOrThrow(dto.email());
+        User user = userService.findByEmailForLogin(dto.email())
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
-        if (user.isGoogleAccount()) {
-            throw new BusinessException(ErrorCode.GOOGLE_ACCOUNT_ACTION_NOT_ALLOWED);
-        }
-        if (!passwordEncoder.matches(dto.password(), user.getPasswordHash())) {
+        if (user.isGoogleAccount() || !passwordEncoder.matches(dto.password(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
         if (user.getStatus() == UserStatus.BANNED) {
@@ -99,7 +97,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthTokenResponseDto adminLogin(AdminLoginRequestDto dto) {
-        Admin admin = adminService.getByEmailOrThrow(dto.email());
+        Admin admin = adminService.findByEmailForLogin(dto.email())
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(dto.password(), admin.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
